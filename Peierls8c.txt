@@ -1,0 +1,8 @@
+For ordinate 0.099275 flux is 5.546882 
+For ordinate 0.508334 flux is 8.410216 
+For ordinate 1.186169 flux is 11.209301 
+For ordinate 2.041413 flux is 12.862492 
+For ordinate 2.958587 flux is 12.862500 
+For ordinate 3.813831 flux is 11.209322 
+For ordinate 4.491666 flux is 8.410244 
+For ordinate 4.900725 flux is 5.546912 
