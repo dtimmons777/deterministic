@@ -23,7 +23,7 @@ int main ( ) {
 
 
    int N=100;
-   int pts=32;
+   int pts=64;
    double sclr_flux_ml[N], sclr_flux_mr[N];
    double delta_xm[N], error=5.0;
    double q_ml[N], q_mr[N];
@@ -76,7 +76,7 @@ int main ( ) {
 //  For mu(m)>0 keep the left point and sweep left to right
 /////////////////////////////  Start Left to Right Sweep  ////////////////////////////////////////////////
 
-while(error > 1e-8 && run<300){
+while(error > 1e-9 && run<300){
   for(i=0;i<pts-ii;i++){
      for(j=0;j<N;j++){     
         A(0,0)=A(1,1)= mu[ii+i]/2.0+1.0/3.0*sigt*delta_xm[j];
@@ -170,23 +170,24 @@ double AA,SS,BB,JL,JR;
     for(i=0;i<N;i++){ 
 
         AA+=siga*delta_xm[i]/2*(sclr_flux_mr[i]+sclr_flux_ml[i]);
-        SS+=delta_xm[i]/2*(sclr_flux_mr[i]+sclr_flux_ml[i]);
+        SS+=delta_xm[i]/2*w[i]*(Q+Q);
+//printf("%lf    %lf\n", sclr_flux_mr[i], sclr_flux_ml[i]);
     }
 
     for(i=0;i<ii;i++){
 
-        JL+=wght[i]*mu[i]*flux_ml[i][0];
-        JR+=wght[ii+i]*mu[ii+i]*flux_mr[ii+i][N-1];
+        JL+=wght[i]*mu[i]*flux_mr[i][0];
+        JR+=wght[ii+i]*mu[ii+i]*flux_ml[ii+i][N-1];
     }
 
     BB=SS-AA-(JR-JL);
 
-std::cout << BB<< "  "<<JL <<"   "<< JR <<std::endl;
+std::cout << JR<<"  "<<JL<< "  "<<  AA<< " " << SS <<" "<< BB << "  " <<run <<std::endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 FILE *fp;
 fp=fopen("Sn_num32.txt","w");
 for(i=0;i<N;i++){
-fprintf(fp, "%lf %d \n", sclr_flux(i), i);
+fprintf(fp, "%lf %lf \n", sclr_flux(i), i*delta_x);
 }
 
 fclose(fp);
