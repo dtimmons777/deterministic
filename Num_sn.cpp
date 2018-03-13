@@ -22,21 +22,21 @@ namespace boost{ namespace math{
 int main ( ) {
 
 
-   int N=10;
-   int pts=8;
+   int N=100;
+   int pts=32;
    double sclr_flux_ml[N], sclr_flux_mr[N];
    double delta_xm[N], error=5.0;
    double q_ml[N], q_mr[N];
    int i, j, k,ii, run=0;
    double start=0.0;
    double end=5.0;
-   double sigt=1.0, c=0.9, sigs=sigt*c, siga=sigt-sigs;
+   double sigt=1.0, c=0.90, sigs=sigt*c, siga=sigt-sigs;
    double delta_x=(end-start)/(N);
    double Q=2.0;
-   double flux_boundRight=delta_x*Q/2.0;
-   double flux_boundLeft=delta_x*Q/2.0;
-   double flux_boundR=delta_x*Q/2.0;
-   double flux_boundL=delta_x*Q/2.0;
+   double flux_boundRight=0.0;
+   double flux_boundLeft=0.0;
+   double flux_boundR=0.0;
+   double flux_boundL=0.0;
    double flux_bound[2];
    double sclr_flux_old[N];
    VectorXd Mass(2);
@@ -61,9 +61,9 @@ int main ( ) {
     for (i=0; i<N; i++){
         sclr_flux_ml[i]=4.0;
         sclr_flux_mr[i]=4.0;
-        q_mr[i]=delta_x*Q/2.0;
-        q_ml[i]=delta_x*Q/2.0;
-        delta_xm[i]=delta_x;//(end-i*delta_x);
+        q_mr[i]=delta_x*Q/2.0/2.0;
+        q_ml[i]=delta_x*Q/2.0/2.0 ;
+        delta_xm[i]=delta_x;
         sclr_flux_old[i]=0.1;
 
     }
@@ -76,7 +76,7 @@ int main ( ) {
 //  For mu(m)>0 keep the left point and sweep left to right
 /////////////////////////////  Start Left to Right Sweep  ////////////////////////////////////////////////
 
-while(error > 0.00001 && run<300){
+while(error > 1e-8 && run<300){
   for(i=0;i<pts-ii;i++){
      for(j=0;j<N;j++){     
         A(0,0)=A(1,1)= mu[ii+i]/2.0+1.0/3.0*sigt*delta_xm[j];
@@ -88,7 +88,8 @@ while(error > 0.00001 && run<300){
         Mass(0)=sigs/6.0*delta_xm[j]*(sclr_flux_ml[j]+sclr_flux_mr[j]/2.0)+q_ml[j]+flux_bound[0];
         Mass(1)=sigs/6.0*delta_xm[j]*(sclr_flux_mr[j]+sclr_flux_ml[j]/2.0)+q_mr[j];
 
-//------------------solve flux------------------
+//------------------solve for angular flux------------------
+
         f=A.householderQr().solve(Mass);
 
         flux_ml[ii+i][j]=flux_boundL=f(1);  // fills the lower half of the matrix
@@ -98,10 +99,10 @@ while(error > 0.00001 && run<300){
     flux_boundL=flux_boundLeft;
 
   }  // end of mu
- 
-  
-// /////////////////////////  mu(m)<0
+
+///////////////////////////////////////  mu(m)<0
 ////////////////////////////////  Start Right to Left Sweep  /////////////////////////////////////////////////////
+
   for(i=0;i<ii;i++){
     for(j=N-1;j>=0;j--){
         
@@ -113,7 +114,8 @@ while(error > 0.00001 && run<300){
         Mass(0)=sigs/6.0*delta_xm[j]*(sclr_flux_ml[j]+sclr_flux_mr[j]/2)+q_ml[j];
         Mass(1)=sigs/6.0*delta_xm[j]*(sclr_flux_mr[j]+sclr_flux_ml[j]/2)+q_mr[j]-flux_bound[1];
 
-//---------------solve flux-------------------------
+//---------------solve for angular flux-------------------------
+
         f=A.householderQr().solve(Mass);
 
         flux_mr[i][j]=flux_boundR=f(0);
@@ -125,8 +127,10 @@ while(error > 0.00001 && run<300){
 
   }  // end of mu
   
+//if(run==0) std::cout << A <<std::endl;
 
 ////////////////////////////////////////////  Scalar Flux   /////////////////////////////////////////////
+
   for(i=0;i<N;i++){ 
           sclr_flux_mr[i]=0.0;
           sclr_flux_ml[i]=0.0;
@@ -141,19 +145,51 @@ while(error > 0.00001 && run<300){
 
   }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////  Scalar flux error ////////////////////////////////////////////////////////////
+
     error=0;
+
     for (i=0;i<N;i++){
         sclr_flux(i)=(sclr_flux_ml[i]+sclr_flux_mr[i])/2.0;
         error+=fabs(sclr_flux(i)-sclr_flux_old[i]);
         sclr_flux_old[i]=sclr_flux(i);
         
     }
-//std::cout << error << "  "<< run <<std::endl;
-run++;
-if (run==100) std::cout<<"error= "<<error<<std::endl;
+
+    run++;
+    if (run==300) std::cout<<"error= "<<error<<std::endl;
+
 }   //end of convergence
-std::cout << sclr_flux << "  "<< run <<std::endl;
+
+
+/////////////////////////////  Balance  /////////////////////////////////////
+
+double AA,SS,BB,JL,JR;
+    AA=SS=JL=JR=0;
+
+    for(i=0;i<N;i++){ 
+
+        AA+=siga*delta_xm[i]/2*(sclr_flux_mr[i]+sclr_flux_ml[i]);
+        SS+=delta_xm[i]/2*(sclr_flux_mr[i]+sclr_flux_ml[i]);
+    }
+
+    for(i=0;i<ii;i++){
+
+        JL+=wght[i]*mu[i]*flux_ml[i][0];
+        JR+=wght[ii+i]*mu[ii+i]*flux_mr[ii+i][N-1];
+    }
+
+    BB=SS-AA-(JR-JL);
+
+std::cout << BB<< "  "<<JL <<"   "<< JR <<std::endl;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+FILE *fp;
+fp=fopen("Sn_num32.txt","w");
+for(i=0;i<N;i++){
+fprintf(fp, "%lf %d \n", sclr_flux(i), i);
+}
+
+fclose(fp);
 
 return 0;
 
