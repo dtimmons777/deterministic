@@ -27,13 +27,13 @@ namespace boost{ namespace math{
 //   fp=fopen("Sn_num51210.txt","w");
    std::vector<double> sclr_flux_ml(N), sclr_flux_mr(N), sclr_flux_ml_old(N), sclr_flux_mr_old(N),s_kl(N),s_kr(N);
    double error=5.0;
-   std::vector<double> q_ml(N), q_mr(N), pos(N), delta_xm(N);
+   std::vector<double> q_ml(N,pts), q_mr(N,pts), pos(N), delta_xm(N);
    int i, j, k,ii, run=0;
    double start=0.0;
    double eps=pow(0.5, 0.0);
    double sigt=2.0/eps, siga=(sigt-sigt*c)*eps, sigs=sigt*c;
    double delta_x=(end-start)/(N);
-   double Q[N];
+   double Q[N][pts];
    double flux_boundRight=0.0;
    double flux_boundLeft=0.0;
    double flux_boundR=0.0;
@@ -65,9 +65,11 @@ namespace boost{ namespace math{
         sclr_flux_ml[i]=0.2;
         sclr_flux_mr[i]=0.2;
         
-        Q[i]=1.0;//*(2.0*(pos[i]/end)*(2.0*(end-pos[i])/end));
-        q_mr[i]=Q[i]*delta_x/4.0;//-1/3*pow(delta_x,2)*(-2.0*end*(2.5*pos[i]+delta_x/2.0)+3.0*pow(pos[i],2)*2.0*x);
-        q_ml[i]=Q[i]*delta_x/4.0;
+        for(j=0;j<pts;j++){
+            Q[i][j]=mu[j]*(.25+1.5*mu[j]*0.75*mu[j]*mu[j])*(end*2.0*pos[i])+sigt*(.25+1.5*mu[j]*0.75*mu[j]*mu[j])*(pos[i]*(end-pos[i]))-sigs/2.0*(pos[i]*(end-pos[i]));
+            q_mr(i,j)=Q[i]*delta_x/4.0;//-1/3*pow(delta_x,2)*(-2.0*end*(2.5*pos[i]+delta_x/2.0)+3.0*pow(pos[i],2)*2.0*x);
+            q_ml(i,j)=Q[i]*delta_x/4.0;
+        }
         delta_xm[i]=delta_x;
         sclr_flux_old[i]=0.1;
 //printf("%lf \n", sclr_flux_mr[i]);
