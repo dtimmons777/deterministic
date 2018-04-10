@@ -61,7 +61,9 @@ namespace boost{ namespace math{
     double flux_ml[pts][N], flux_mr[pts][N];
     
     for (i=0; i<N; i++){
-        pos[i]=i*delta_x+delta_x/2.0;
+        pos[i]=i*delta_x;
+		xl=pos[i];
+		xr=pos[i]+delta_x;
         sclr_flux_ml[i]=0.2;
         sclr_flux_mr[i]=0.2;
         
@@ -69,8 +71,8 @@ namespace boost{ namespace math{
             a=(.25+1.5*mu[j]*0.75*mu[j]*mu[j])
             Q[i][j]=mu[j]*a*(end*2.0*pos[i])+sigt*a*(pos[i]*(end-pos[i]))-sigs/2.0*(pos[i]*(end-pos[i]));
 
-            q_mr(i,j)=Q[i]*delta_x/4.0;
-            q_ml(i,j)=Q[i]*delta_x/4.0;
+            q_mr(i,j)=-(N*(xl - xr)*(xl - xr)*(6.0*a*sigt*xl*xl + 2.0*a*sigt*xr*xr - 3.0*c*sigt*xl*xl - c*sigt*xr*xr - 12.0*a*mu[j]*end + 16.0*a*mu[j]*xl + 8.0*a*mu[j]*xr - 8.0*a*end*sigt*xl - 4.0*a*end*sigt*xr + 4.0*c*end*sigt*xl + 2.0*c*end*sigt*xr + 4.0*a*sigt*xl*xr - 2.0*c*sigt*xl*xr))/(24.0*end)
+            q_ml(i,j)=-(N*(xl - xr)*(xl - xr)*(2.0*a*sigt*xl*xl + 6.0*a*sigt*xr*xr - c*sigt*xl*xl - 3.0*c*sigt*xr*xr - 12.0*a*mu[j]*end + 8.0*a*mu[j]*xl + 16.0*a*mu[j]*xr - 4.0*a*end*sigt*xl - 8.0*a*end*sigt*xr + 2.0*c*end*sigt*xl + 4.0*c*end*sigt*xr + 4.0*a*sigt*xl*xr - 2.0*c*sigt*xl*xr))/(24.0*end);
         }
         delta_xm[i]=delta_x;
         sclr_flux_old[i]=0.1;
